@@ -1,13 +1,12 @@
-import React from 'react';
-import { FaShoppingCart } from 'react-icons/fa';
+import React from "react";
 
 const CartWidget = () => {
-    return (
-        <div className="d-flex align-items-center text-white">
-            <FaShoppingCart size={24} />
-            <span className="ms-2 badge bg-danger">3</span>
-        </div>
-    );
+return (
+    <div className="cart-widget">
+        <i className="fas fa-shopping-cart"></i>
+        <span className="badge bg-primary">3</span>
+    </div>
+);
 };
 
 export default CartWidget;
