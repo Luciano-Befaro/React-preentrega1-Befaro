@@ -1,0 +1,12 @@
+.item-card {
+    width: 100%;   
+    min-width: 250px;  
+    max-width: 300px;  
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+}

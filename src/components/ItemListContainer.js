@@ -1,43 +1,68 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-
-const mockProducts = [
-{ id: "1", name: "Auriculares, Logitech", category: "electronics", description: "Con un diseño revolucionario, acústica avanzada y comodidad ergonómica, la estación base A50 INALÁMBRICO + ofrece una experiencia de juego inolvidable." },
-{ id: "2", name: "Campera, AirJordan", category: "ropa", description: "Mejora tu estilo en el frío con Air Jordan. Repelente al agua y equipada con nuestra tecnología aislante Therma-FIT y aislamiento de plumón, esta amplia campera te permite combinar calidez y comodidad con estilo. El gorro extraíble, el cuello alto y el cierre bidireccional te permiten personalizar la cobertura para que los días fríos nunca te sorprendan." },
-{ id: "3", name: "Sillon, Forrado Cuero", category: "hogar", description: "El Sofá Emery combina líneas rectas y sencillas con un diseño inconfundible, caracterizado por su aspecto flotante, ligero y distintivo. El sofá descansa sobre 2 bases de diseño elegante y sofisticado en un acabado de acero pulido. Con asientos de gran profundidad, ofrece un confort excepcional, ideal para relajarse o utilizarlo como cama en situaciones inesperadas. El Sofá Emery es la elección perfecta para quienes buscan durabilidad y estilo en un espacio moderno." }
-];
-
-const getProducts = (categoryId) => {
-return new Promise((resolve) => {
-    setTimeout(() => {
-    if (categoryId) {
-        resolve(mockProducts.filter((prod) => prod.category === categoryId));
-    } else {
-        resolve(mockProducts);
-    }
-    }, 1000);
-});
-};
+import { useParams } from "react-router-dom";
+import ItemList from "./ItemList";
+import { db, collection, getDocs } from "../services/firebase";
 
 const ItemListContainer = ({ greeting }) => {
 const { categoryId } = useParams();
 const [products, setProducts] = useState([]);
+const [loading, setLoading] = useState(true);
+
+const categoryNames = {
+    electronics: "Electrónica 💻",
+    ropa: "Ropa 👕",
+    hogar: "Hogar 🏠",
+};
 
 useEffect(() => {
-    getProducts(categoryId).then((data) => setProducts(data));
+    console.log("categoryId obtenido:", categoryId);
+    const fetchProducts = async () => {
+    setLoading(true);
+    try {
+        console.log("Cargando productos desde Firebase...");
+        const querySnapshot = await getDocs(collection(db, "productos"));
+        const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        console.log("Productos obtenidos:", items);
+
+        items.sort((a, b) => {
+            if (a.category === b.category) {
+              return a.price - b.price;  // Ordena por precio dentro de la misma categoría
+            }
+            return a.category.localeCompare(b.category);  // Ordena por categoría
+        });
+
+        if (categoryId) {
+        const filteredItems = items.filter(item => item.category === categoryId);
+        console.log(`Filtrando productos de la categoría: ${categoryId}`, filteredItems);
+        setProducts(filteredItems);
+        } else {
+        setProducts(items);
+        }
+    } catch (error) {
+        console.error("Error al obtener productos:", error);
+    } finally {
+        setLoading(false);
+    }
+    };
+
+    fetchProducts();
 }, [categoryId]);
 
 return (
     <div className="container mt-4">
-    <h2>{greeting}</h2>
-    {categoryId && <h3>Categoría: {categoryId}</h3>}
-    <ul>
-        {products.map((product) => (
-        <li key={product.id}>
-            <Link to={`/item/${product.id}`}>{product.name}</Link>
-        </li>
-        ))}
-    </ul>
+    {categoryId ? (
+    <h1 className="text-center">{categoryNames[categoryId]}</h1>
+    ) : (
+    greeting && <h1 className="text-center">{greeting}</h1>
+    )}
+    {loading ? (
+        <p>Cargando productos...</p>
+    ) : products.length > 0 ? (
+        <ItemList products={products} />
+    ) : (
+        <p>No hay productos disponibles en esta categoría.</p>
+    )}
     </div>
 );
 };
