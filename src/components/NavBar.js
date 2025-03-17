@@ -7,7 +7,7 @@ return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
     <div className="container">
         {/* Enlace a la home */}
-        <Link className="navbar-brand" to="/">Mi Tienda</Link>
+        <Link className="navbar-brand" to="/">UrbanMarket</Link>
 
         <button
             className="navbar-toggler"
